@@ -1,0 +1,199 @@
+Type
+	1.1 프리미티브 : 프리미티브 유형에 액세스하면 해당 값에 직접 작업합니다.
+		string, number, boolean, null, undefined, symbol
+		const foo = 1;
+		let bar = foo;
+		bar = 9;
+
+		console.log(foo, bar); // => 1, 9
+		
+	2.2 컴플렉스 : 복잡한 유형에 액세스하면 해당 값에 대한 참조로 작업합니다.
+		object, array, function
+		const foo = [1, 2];
+		const bar = foo;
+		bar[0] = 9;
+
+		console.log(foo[0], bar[0]); // => 9, 9
+
+References
+	2.1 모든 참조에 const를 사용하십시오. var 사용하지 마십시오. eslint : prefer-const, no-const-assign
+	Why? 이렇게하면 참조를 다시 할당 할 수 없으므로 버그가 발생하고 코드를 이해하기 어렵습니다.
+		// bad
+		var a = 1;
+		var b = 2;
+
+		// good
+		const a = 1;
+		const b = 2;
+	
+	2.2 참조를 재 지정해야하는 경우 var 대신 let을 사용하십시오 eslint : no-var
+	Why? 변수처럼 function-scoped가 아닌 block-scoped가되도록하자.
+		// bad
+		var count = 1;
+		if (true) {
+		  count += 1;
+		}
+
+		// good, use the let.
+		let count = 1;
+		if (true) {
+		  count += 1;
+		}
+		
+	2.3 let과 const는 모두 block-scoped이다.
+		// const and let only exist in the blocks they are defined in.
+		{
+		  let a = 1;
+		  const b = 1;
+		}
+		console.log(a); // ReferenceError
+		console.log(b); // ReferenceError
+		
+Objects
+	3.1 객체 생성을 위해 리터럴 구문을 사용합니다. eslint: no-new-object
+		// bad
+		const item = new Object();
+
+		// good
+		const item = {};
+		
+	3.2 동적 속성 이름을 사용하여 개체를 만들 때 계산 된 속성 이름을 사용합니다.	
+	Why? 그것들을 사용하면 한 장소에서 객체의 모든 속성을 정의 할 수 있습니다.	
+		function getKey(k) {
+			return `a key named ${k}`;
+		}
+
+		// bad
+		const obj = {
+			id: 5,
+			name: 'San Francisco',
+		};
+		obj[getKey('enabled')] = true;
+
+		// good
+		const obj = {
+			id: 5,
+			name: 'San Francisco',
+			[getKey('enabled')]: true,
+		};
+		
+	3.3 Object method를 사용한다. eslint: object-shorthand
+		// bad
+		const atom = {
+			value: 1,
+
+			addValue: function (value) {
+				return atom.value + value;
+			},
+		};
+
+		// good
+		const atom = {
+			value: 1,
+
+			addValue(value) {
+				return atom.value + value;
+			},
+		};
+	
+	3.4 속성 값 단축을 사용하십시오. eslint: object-shorthand
+	Why? 그것은 쓰고 설명하는 것이 더 짧습니다.
+		const lukeSkywalker = 'Luke Skywalker';
+
+		// bad
+		const obj = {
+			lukeSkywalker: lukeSkywalker,
+		};
+
+		// good
+		const obj = {
+			lukeSkywalker,
+		};
+	
+	3.5 개체 선언의 시작 부분에 속기 속성을 그룹화하십시오.
+	Why? 속기를 사용하는 속성을 쉽게 알 수 있습니다.
+		const anakinSkywalker = 'Anakin Skywalker';
+		const lukeSkywalker = 'Luke Skywalker';
+
+		// bad
+		const obj = {
+			episodeOne: 1,
+			twoJediWalkIntoACantina: 2,
+			lukeSkywalker,
+			episodeThree: 3,
+			mayTheFourth: 4,
+			anakinSkywalker,
+		};
+
+		// good
+		const obj = {
+			lukeSkywalker,
+			anakinSkywalker,
+			episodeOne: 1,
+			twoJediWalkIntoACantina: 2,
+			episodeThree: 3,
+			mayTheFourth: 4,
+		};
+	
+	3.6 유효하지 않은 식별자 인 속성들만 인용한다. eslint: quote-props
+	Why? 일반적으로 우리는 주관적으로 읽기 쉽다고 생각합니다. 구문 강조를 향상시키고 많은 JS 엔진에서보다 쉽게 최적화 할 수 있습니다.
+		// bad
+		const bad = {
+			'foo': 3,
+			'bar': 4,
+			'data-blah': 5,
+		};
+
+		// good
+		const good = {
+			foo: 3,
+			bar: 4,
+			'data-blah': 5,
+		};
+		
+	3.7 hasOwnProperty, propertyIsEnumerable 및 isPrototypeOf와 같은 Object.prototype 메소드를 직접 호출하지 마십시오.
+	Why? 이러한 메소드는 해당 객체의 속성에 따라 음영 처리 될 수 있습니다 (예 : {hasOwnProperty : false}). 또는 객체가 null 객체 (Object.create (null)) 일 수 있습니다.
+		// bad
+		console.log(object.hasOwnProperty(key));
+
+		// good
+		console.log(Object.prototype.hasOwnProperty.call(object, key));
+
+		// best
+		const has = Object.prototype.hasOwnProperty; // cache the lookup once, in module scope.
+		/* or */
+		import has from 'has'; // https://www.npmjs.com/package/has
+		// ...
+		console.log(has.call(object, key));
+	
+	3.8 Object보다는 Object spread 연산자를 선호합니다. 얕은 복사 객체에 할당하십시오. object rest 연산자를 사용하여 특정 속성이 생략 된 새 객체를 가져옵니다.
+		// very bad
+		const original = { a: 1, b: 2 };
+		const copy = Object.assign(original, { c: 3 }); // this mutates `original` ಠ_ಠ
+		delete copy.a; // so does this
+
+		// bad
+		const original = { a: 1, b: 2 };
+		const copy = Object.assign({}, original, { c: 3 }); // copy => { a: 1, b: 2, c: 3 }
+
+		// good
+		const original = { a: 1, b: 2 };
+		const copy = { ...original, c: 3 }; // copy => { a: 1, b: 2, c: 3 }
+
+		const { a, ...noA } = copy; // noA => { b: 2, c: 3 }
+	
+Arrays
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+		
+		
