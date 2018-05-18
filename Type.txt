@@ -1,11 +1,13 @@
 Type
-	1.1 프리미티브 : 프리미티브 유형에 액세스하면 해당 값에 직접 작업합니다.
+	1.1 프리미티브 : 프리미티브 유형에 액세스하면 해당 값에 직접 작업합니다. (자바 자료형 정리(Primitive Type), http://jdm.kr/blog/213) - 
 		string, number, boolean, null, undefined, symbol
 		const foo = 1;
 		let bar = foo;
 		bar = 9;
 
 		console.log(foo, bar); // => 1, 9
+		Symbols cannot be faithfully polyfilled, so they should not be used when targeting browsers/environments that don't support them natively.
+			polyfill 설명 http://webdir.tistory.com/328
 		
 	2.2 컴플렉스 : 복잡한 유형에 액세스하면 해당 값에 대한 참조로 작업합니다.
 		object, array, function
@@ -16,6 +18,7 @@ Type
 		console.log(foo[0], bar[0]); // => 9, 9
 
 References
+	es6 spec
 	2.1 모든 참조에 const를 사용하십시오. var 사용하지 마십시오. eslint : prefer-const, no-const-assign
 	Why? 이렇게하면 참조를 다시 할당 할 수 없으므로 버그가 발생하고 코드를 이해하기 어렵습니다.
 		// bad
@@ -26,6 +29,7 @@ References
 		const a = 1;
 		const b = 2;
 	
+	es6 spec
 	2.2 참조를 재 지정해야하는 경우 var 대신 let을 사용하십시오 eslint : no-var
 	Why? 변수처럼 function-scoped가 아닌 block-scoped가되도록하자.
 		// bad
@@ -39,7 +43,8 @@ References
 		if (true) {
 		  count += 1;
 		}
-		
+	
+	es6 spec
 	2.3 let과 const는 모두 block-scoped이다.
 		// const and let only exist in the blocks they are defined in.
 		{
@@ -183,12 +188,131 @@ Objects
 		const { a, ...noA } = copy; // noA => { b: 2, c: 3 }
 	
 Arrays
+	4.1 배열을 만들 때 리터럴 구문을 사용하세요. eslint rules: no-array-constructor.
+		// bad
+		const items = new Array();
+
+		// good
+		const items = [];
+		
+	4.2 배열에 항목을 직접 대체하지 말고 Array#push를 사용하세요.
+		const someStack = [];
+
+		// bad
+		someStack[someStack.length] = 'abracadabra';
+
+		// good
+		someStack.push('abracadabra');
+		
+	4.3 배열을 복사하는 경우, 배열의 확장 연산자인 ...을 사용하세요.
+		// bad
+		const len = items.length;
+		const itemsCopy = [];
+		let i;
+
+		for (i = 0; i < len; i += 1) {
+		  itemsCopy[i] = items[i];
+		}
+
+		// good
+		const itemsCopy = [...items];
+		
+	4.4 Array-Like 객체를 배열로 변환하려면 Array#from을 사용하세요.
+		Array.ffrom()
+		https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+		
+		const foo = document.querySelectorAll('.foo');
+
+		// good
+		const nodes = Array.from(foo);
+
+		// best
+		const nodes = [...foo];
+		
+	4.5 iterables 매핑을 위해 확장연산자(...) 대신 Array.from을 사용하십시오. 왜냐하면 중간 배열을 만들지 않기 때문입니다.
+		// bad
+		const baz = [...foo].map(bar);
+
+		// good
+		const baz = Array.from(foo, bar);
 	
-	
-	
-	
-	
-	
+	4.6 배열 메소드 콜백에서 return 문을 사용하십시오. 함수 본문에 부작용이없는 표현식을 반환하는 단일 문으로 구성되어 있으면 반환을 생략해도됩니다.
+		// good
+		[1, 2, 3].map((x) => {
+		  const y = x + 1;
+		  return x * y;
+		});
+
+		// good
+		[1, 2, 3].map(x => x + 1);
+
+		// bad - 반환 값이 없다는 것은 첫번째 반복 후에`acc`가 정의되지 않음을 의미합니다.
+		Array.prototype.reduce()
+		https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
+		[[0, 1], [2, 3], [4, 5]].reduce((acc, item, index) => {
+		  const flatten = acc.concat(item);
+		  acc[index] = flatten;
+		});
+
+		// good
+		[[0, 1], [2, 3], [4, 5]].reduce((acc, item, index) => {
+		  const flatten = acc.concat(item);
+		  acc[index] = flatten;
+		  return flatten;
+		});
+
+		// bad
+		inbox.filter((msg) => {
+		  const { subject, author } = msg;
+		  if (subject === 'Mockingbird') {
+			return author === 'Harper Lee';
+		  } else {
+			return false;
+		  }
+		});
+
+		// good
+		inbox.filter((msg) => {
+		  const { subject, author } = msg;
+		  if (subject === 'Mockingbird') {
+			return author === 'Harper Lee';
+		  }
+
+		  return false;
+		});
+		
+	4.7 배열에 여러 줄이있는 경우 열기 후 및 닫기 전에 배열 줄 바꿈을 하세요.
+		// bad
+		const arr = [
+		  [0, 1], [2, 3], [4, 5],
+		];
+
+		const objectInArray = [{
+		  id: 1,
+		}, {
+		  id: 2,
+		}];
+
+		const numberInArray = [
+		  1, 2,
+		];
+
+		// good
+		const arr = [[0, 1], [2, 3], [4, 5]];
+
+		const objectInArray = [
+		  {
+			id: 1,
+		  },
+		  {
+			id: 2,
+		  },
+		];
+
+		const numberInArray = [
+		  1,
+		  2,
+		];
 	
 	
 	
