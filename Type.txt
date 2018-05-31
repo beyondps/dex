@@ -314,10 +314,107 @@ Arrays
 		  2,
 		];
 	
-	
-	
-	
-	
-	
+Modules	
+	10.1 비표준 모듈 시스템이 아니라면 항상 (import/export) 를 사용하세요. 이렇게 함으로써 원하는 모듈 시스템에 언제든지 트랜스파일(Transpile) 할 수 있습니다.
+	Why? 모듈은 곧 미래입니다. 미래를 선점하고 애용합시다.
+		// bad
+		const AirbnbStyleGuide = require('./AirbnbStyleGuide');
+		module.exports = AirbnbStyleGuide.es6;
+
+		// ok
+		import AirbnbStyleGuide from './AirbnbStyleGuide';
+		export default AirbnbStyleGuide.es6;
+
+		// best
+		import { es6 } from './AirbnbStyleGuide';
+		export default es6;
 		
+	10.2 와일드카드를 이용한 가져오기는 사용하지 않습니다.
+	Why? single default export인 것에 주의할 필요가 있기 때문입니다.
+		// bad
+		import * as AirbnbStyleGuide from './AirbnbStyleGuide';
+
+		// good
+		import AirbnbStyleGuide from './AirbnbStyleGuide';
 		
+	10.3 import 문에서 직접 추출(Export)하지 않습니다.
+		// bad
+		// filename es6.js
+		export { es6 as default } from './AirbnbStyleGuide';
+
+		// good
+		// filename es6.js
+		import { es6 } from './AirbnbStyleGuide';
+		export default es6;
+
+	10.4 한 위치의 경로에서만 가져 오기. eslint : no-duplicate-imports
+	Why? 동일한 경로에서 여러 줄을 가져 오면 코드를 유지 관리하기가 더 어려워 질 수 있습니다.
+		// bad
+		import foo from 'foo';
+		// … some other imports … //
+		import { named1, named2 } from 'foo';
+
+		// good
+		import foo, { named1, named2 } from 'foo';
+
+		// good
+		import foo, {
+			named1,
+			named2,
+		} from 'foo';
+		
+	10.5 변경 가능한 바인딩을 export하지 않는다. eslint: import/no-mutable-exports
+	Why? 변경되는것은 일반적으로 피해야하지만 특히 변경가능한 바인딩을 export 할 때는 피해야합니다. 일부 특수한 경우에는이 기술이 필요할 수도 있지만, 일반적으로 상수 참조 만 내 보내야합니다.
+		// bad
+		let foo = 3;
+		export { foo };
+
+		// good
+		const foo = 3;
+		export { foo };
+	
+	10.6 single export 모듈은 명명 된 내보내기에 비해 default export 를 선호합니다. eslint : import / prefer-default-export
+	Why? 한 가지만 내보내는 더 많은 파일을 장려하기 위해 가독성과 유지 관리 용이성이 향상되었습니다.
+		// bad
+		export function foo() {}
+
+		// good
+		export default function foo() {}
+		
+	10.7 모든 import문은 non-import statements 보다 위에 써 넣으세요. eslint: import/first
+	Why? Since imports are hoisted, keeping them all at the top prevents surprising behavior.
+		// bad
+		import foo from 'foo';
+		foo.init();
+
+		import bar from 'bar';
+
+		// good
+		import foo from 'foo';
+		import bar from 'bar';
+
+		foo.init();
+		
+	10.8 여러줄 import는 여러줄 배열이나 개체 리터럴처럼 들여쓰기 되어야 합니다.
+	Why? 중괄호는 다른 모든 중괄호 블록과 동일한 들여 쓰기 규칙을 따르고 후행 쉼표도 마찬가지입니다.
+		// bad
+		import {longNameA, longNameB, longNameC, longNameD, longNameE} from 'path';
+
+		// good
+		import {
+			longNameA,
+			longNameB,
+			longNameC,
+			longNameD,
+			longNameE,
+		} from 'path';
+	
+	10.9 모듈 import 문에서 Webpack loader 문법을 허용하지 않는다. eslint: import/no-webpack-loader-syntax
+	Why? import 에서 Webpack 구문을 사용하면 코드가 모듈 묶음 처리기에 연결되므로, webapck.config.js 에 우선권을 주게 된다.
+		// bad
+		import fooSass from 'css!sass!foo.scss';
+		import barCss from 'style!css!bar.css';
+
+		// good
+		import fooSass from 'foo.scss';
+		import barCss from 'bar.css';
